@@ -19,8 +19,9 @@ namespace AudIO
         void resume() override;
         void pause() override;
         void stop() override;
+        bool isReady() const { return _ready.load(); }
 
-    void process(float* data);
+        void process(float* data);
 
     private:
         enum State
@@ -29,5 +30,6 @@ namespace AudIO
             Playing,
         };
         std::atomic<int> _state{ Stopped };
+        std::atomic<bool> _ready{ false };
     };
 };

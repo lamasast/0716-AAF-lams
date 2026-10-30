@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DesignImpl.h"
+#include "../Includes/Design.h"
 
 namespace AudIO
 {
@@ -25,7 +26,7 @@ namespace AudIO
         _running.store( true );
     }
 
-    inline void DesignImpl::process( Buffer<float>& Buffer )
+    void DesignImpl::process( Buffer<float>& Buffer )
     {
         auto dInGain     = designInputGain.getNext( _blockSize );
         auto dOutGain    = designOutputGain.getNext( _blockSize );
@@ -141,7 +142,7 @@ namespace AudIO
         _clearRequest      = false;
     }
 
-    inline void DesignImpl::clear()
+    void DesignImpl::clear()
     {
         _clearRequest.store( true );
         if( !_running.load() )

@@ -25,6 +25,7 @@ namespace AudIO
 
     void StereoOut::start( uint32_t samplerate, uint32_t blocksize )
     {
+        _ready.store( false );
         OutputAudioSpec.freq    = samplerate;
         OutputAudioSpec.samples = blocksize;
         // Initialize the audio system
@@ -40,6 +41,7 @@ namespace AudIO
         }
 
         prepareToPlay( samplerate, blocksize );
+        _ready.store( true );
     }
 
     void StereoOut::pause()
@@ -57,6 +59,7 @@ namespace AudIO
     void StereoOut::stop()
     {
         _state.store( Stopped );
+        _ready.store( false );
         _buffer.clearOutputs();
         SDL_CloseAudio();
         teardown();
@@ -64,7 +67,7 @@ namespace AudIO
 
     void StereoOut::process( float* data )
     {
-        doProcess();
+        IAudioDevice::process( _buffer );
         // Copy to actual audio device buffer
         for( int ch = 0; ch < _buffer.getNumOutputChannels(); ++ch )
         {

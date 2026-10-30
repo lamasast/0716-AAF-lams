@@ -61,6 +61,7 @@ official firmware release here yet.
 |---|---|---|
 | [`Source/Application/`](Source/Application) | Application (built on JUCE) | AGPL-3.0-or-later |
 | [`AudIO/`](AudIO) | Audio engine library | AGPL-3.0-or-later |
+| [`LamaSyncBridge/`](LamaSyncBridge) | Windows AudIO and ESP32-S3 serial prototype | AGPL-3.0-or-later |
 | [`ComProtocol/`](ComProtocol) | Hardware communication protocol | AGPL-3.0-or-later |
 | [`Linux/`](Linux) | Buildroot Linux image | GPL-2.0 (Buildroot) |
 

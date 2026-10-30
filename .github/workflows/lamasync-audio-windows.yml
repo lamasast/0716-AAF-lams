@@ -1,0 +1,77 @@
+name: LamaSync AudIO Windows
+
+on:
+  push:
+    branches:
+      - feature/lamasync-audio-windows-bridge
+    paths:
+      - "AudIO/**"
+      - "LamaSyncBridge/**"
+      - ".github/workflows/lamasync-audio-windows.yml"
+  pull_request:
+    paths:
+      - "AudIO/**"
+      - "LamaSyncBridge/**"
+      - ".github/workflows/lamasync-audio-windows.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-x64:
+    runs-on: windows-2022
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build and run CTest
+        shell: pwsh
+        run: .\LamaSyncBridge\build-windows.ps1 -Configuration Release
+
+      - name: Run protocol-only smoke test
+        shell: pwsh
+        run: |
+          $exe = '.\LamaSyncBridge\build-win\bin\Release\LamaSyncAudIO.exe'
+          $commands = "STATUS`nSTART`nSTATUS`nLOOP ON`nSTATUS`nSTOP`nQUIT`n"
+          $result = $commands | & $exe --protocol-only
+          $result | Write-Host
+          if ($LASTEXITCODE -ne 0) { throw "Protocol smoke test failed with exit code $LASTEXITCODE" }
+          foreach ($expected in @(
+            'STATUS playing=0 loop=0',
+            'ACK START',
+            'STATUS playing=1 loop=0',
+            'ACK LOOP ON',
+            'STATUS playing=1 loop=1',
+            'ACK STOP',
+            'ACK QUIT'
+          )) {
+            if ($result -notcontains $expected) { throw "Missing smoke-test output: $expected" }
+          }
+
+      - name: Stage release artifact
+        shell: pwsh
+        run: |
+          $stage = '.\artifact\LamaSyncAudIO-Windows-x64'
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item '.\LamaSyncBridge\build-win\bin\Release\LamaSyncAudIO.exe' $stage
+          Copy-Item '.\LamaSyncBridge\build-win\bin\Release\LamaSyncAudioRenderTest.exe' $stage
+          Copy-Item '.\LamaSyncBridge\build-win\audio-test\lamasync-220hz-48k.wav' $stage
+          Copy-Item '.\LamaSyncBridge\README.md' $stage
+          Copy-Item '.\LamaSyncBridge\LICENSES.md' $stage
+          Copy-Item '.\LICENSE' $stage
+          $hashes = Get-ChildItem -LiteralPath $stage -File | Sort-Object Name | ForEach-Object {
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          }
+          $hashes | Set-Content -LiteralPath (Join-Path $stage 'SHA256SUMS.txt') -Encoding ascii
+
+      - name: Upload Windows executable and audio evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: LamaSyncAudIO-Windows-x64
+          path: artifact/LamaSyncAudIO-Windows-x64
+          if-no-files-found: error
+          retention-days: 30

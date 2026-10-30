@@ -28,11 +28,13 @@ if(MSVC)
     $<$<CONFIG:Release>:/MT> # Runtime library: Multi-threaded
     $<$<CONFIG:RelWithDebInfo>:/MT> # Runtime library: Multi-threaded                           
     $<$<CONFIG:Debug>:/MTd> # Runtime library: Multi-threaded Debug
-    /MP /Gm- /Zi
+    /MP /Z7
     /permissive-
     /fp:fast
    )   
 endif(MSVC)
+
+option(AUDIO_BUILD_EXAMPLES "Build upstream AudIO demonstration applications" ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -115,9 +117,9 @@ target_include_directories(AirWindows_plugins PRIVATE "AudIO/airwindows" "AudIO/
 get_target_property(AUDIO_CORE_SOURCES AudIO_Core SOURCES)
 get_target_property(DAW_CORE_SOURCES DAW_Core SOURCES)
 get_target_property(AIRWINDOWS_SOURCES AirWindows_plugins SOURCES)
-source_group(TREE ${CMAKE_SOURCE_DIR}/AudIO FILES ${AUDIO_CORE_SOURCES})
-source_group(TREE ${CMAKE_SOURCE_DIR}/AudIO FILES ${DAW_CORE_SOURCES})
-source_group(TREE ${CMAKE_SOURCE_DIR}/AudIO FILES ${AIRWINDOWS_SOURCES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/AudIO FILES ${AUDIO_CORE_SOURCES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/AudIO FILES ${DAW_CORE_SOURCES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/AudIO FILES ${AIRWINDOWS_SOURCES})
 
 set_target_properties(AudIO_Core PROPERTIES FOLDER "Libraries" )
 set_target_properties(DAW_Core PROPERTIES FOLDER "Libraries" )
@@ -129,4 +131,6 @@ target_compile_features(AirWindows_plugins PRIVATE cxx_std_17)
 
 # Find packages go here.
 # Add 
-add_subdirectory(AudIO/Example)
+if(AUDIO_BUILD_EXAMPLES)
+    add_subdirectory(AudIO/Example)
+endif()
